@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Inter } from "next/font/google";
 import { Button } from "@/components/ui/button";
 import { CodeEditor } from "@/components/code-editor";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -11,9 +11,13 @@ export default function Home() {
   const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
   const [errors, setErrors] = useState([]);
+  const codeRef = useRef(code);
+
+  useEffect(() => {
+    codeRef.current = code;
+  }, [code]);
 
   function handleCodeChange(newCode: string) {
-    console.log({ newCode });
     setCode(newCode);
   }
 
@@ -21,16 +25,17 @@ export default function Home() {
     console.log("RUNNING");
     try {
       setExecuting(true);
+      setErrors([]);
+      setOutput("");
       const response = await fetch("/api/execute", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code: codeRef.current }),
       });
 
       const result = await response.json();
-      console.log({ result });
 
       if (result.errors) {
         setErrors(result.errors);
@@ -59,6 +64,7 @@ export default function Home() {
                 variant="ghost"
                 onClick={handleExecute}
                 disabled={executing}
+                title="Execute code (Shift+Enter)"
               >
                 <PlayIcon className="h-5 w-5" />
                 <span className="sr-only">Run code</span>
@@ -73,9 +79,10 @@ export default function Home() {
               </Button>
             </div>
           </div>
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-auto ">
             <CodeEditor
               onChange={handleCodeChange}
+              onExecute={handleExecute}
               code={code}
               errors={errors}
             />

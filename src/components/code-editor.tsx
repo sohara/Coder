@@ -8,10 +8,12 @@ import { defaultKeymap } from "@codemirror/commands";
 export function CodeEditor({
   code,
   onChange,
+  onExecute,
   errors,
 }: {
   code: string;
   onChange: (newCode: string) => void;
+  onExecute: () => void;
   errors: string[];
 }) {
   const editorRef = useRef(null);
@@ -24,7 +26,17 @@ export function CodeEditor({
         extensions: [
           basicSetup,
           javascript(),
-          keymap.of(defaultKeymap),
+          // keymap.of(defaultKeymap),
+          keymap.of([
+            ...defaultKeymap,
+            {
+              key: "Shift-Enter",
+              run: () => {
+                onExecute();
+                return true;
+              },
+            },
+          ]),
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
               const newCode = update.state.doc.toString();
@@ -45,6 +57,19 @@ export function CodeEditor({
       };
     }
   }, []);
+
+  // Update editor content if `code` prop changes
+  useEffect(() => {
+    if (viewRef.current) {
+      const currentDoc = viewRef.current.state.doc.toString();
+      if (currentDoc !== code) {
+        const transaction = viewRef.current.state.update({
+          changes: { from: 0, to: currentDoc.length, insert: code },
+        });
+        viewRef.current.dispatch(transaction);
+      }
+    }
+  }, [code]);
 
   return (
     <>
