@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Docker from "dockerode";
 
-const docker = Docker();
+const docker = new Docker();
 
 export default async function handler(
   req: NextApiRequest,
@@ -32,6 +32,8 @@ function isExpectedBody(body: any): body is ExecuteBody {
 }
 
 async function runCodeInDocker(code: string): Promise<string> {
+  const TIMEOUT_MS = 5000; // Set the time limit to 5 seconds
+
   const container = await docker.createContainer({
     Image: "node:20", // Use the Node.js 18 image
     Cmd: ["node", "-e", code],
@@ -40,14 +42,29 @@ async function runCodeInDocker(code: string): Promise<string> {
     Tty: false,
   });
 
-  return new Promise((resolve, reject) => {
-    container.start((err, data) => {
+  let timeoutId: NodeJS.Timeout;
+
+  const timeoutPromise = new Promise<void>((_, reject) => {
+    timeoutId = setTimeout(async () => {
+      try {
+        await container.stop({ t: 0 }); // Force stop immediately
+      } catch (error) {
+        // Ignore stop errors as the container might have already stopped
+      }
+      reject(new Error("Execution timed out"));
+    }, TIMEOUT_MS);
+  });
+
+  const executionPromise = new Promise<string>((resolve, reject) => {
+    container.start(async (err) => {
       if (err) {
+        clearTimeout(timeoutId);
         return reject(err);
       }
 
-      container.wait((err, data) => {
+      container.wait(async (err, data) => {
         if (err) {
+          clearTimeout(timeoutId);
           return reject(err);
         }
 
@@ -59,6 +76,7 @@ async function runCodeInDocker(code: string): Promise<string> {
           },
           async (err, stream) => {
             if (err) {
+              clearTimeout(timeoutId);
               return reject(err);
             }
 
@@ -68,17 +86,28 @@ async function runCodeInDocker(code: string): Promise<string> {
             });
 
             stream.on("end", async () => {
-              await container.remove();
+              clearTimeout(timeoutId);
               resolve(output);
+              // Remove the container after resolving
+              await container.remove();
             });
 
             stream.on("error", async (err) => {
-              await container.remove();
+              clearTimeout(timeoutId);
               reject(err);
+              // Remove the container after rejecting
+              await container.remove();
             });
           },
         );
       });
+    });
+  });
+
+  return Promise.race([timeoutPromise, executionPromise]).finally(async () => {
+    // Ensure container removal in case of timeout
+    await container.remove().catch(() => {
+      // Ignore removal errors
     });
   });
 }
