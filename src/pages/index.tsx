@@ -1,10 +1,49 @@
 import Image from "next/image";
 import { Inter } from "next/font/google";
 import { Button } from "@/components/ui/button";
+import { CodeEditor } from "@/components/code-editor";
+import { useState } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
+  const [executing, setExecuting] = useState(false);
+  const [code, setCode] = useState("");
+  const [output, setOutput] = useState("");
+  const [errors, setErrors] = useState([]);
+
+  function handleCodeChange(newCode: string) {
+    console.log({ newCode });
+    setCode(newCode);
+  }
+
+  async function handleExecute() {
+    console.log("RUNNING");
+    try {
+      setExecuting(true);
+      const response = await fetch("/api/execute", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code }),
+      });
+
+      const result = await response.json();
+      console.log({ result });
+
+      if (result.errors) {
+        setErrors(result.errors);
+      } else {
+        setOutput(result.result);
+      }
+    } catch (error) {
+      setErrors([error.message]);
+    } finally {
+      setExecuting(false);
+    }
+  }
+
   return (
     <main className={`flex-1 overflow-hidden ${inter.className}`}>
       <div className="grid h-full grid-cols-2 gap-4 p-4">
@@ -15,6 +54,15 @@ export default function Home() {
               <span className="text-sm font-medium">main.js</span>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleExecute}
+                disabled={executing}
+              >
+                <PlayIcon className="h-5 w-5" />
+                <span className="sr-only">Run code</span>
+              </Button>
               <Button size="icon" variant="ghost">
                 <SaveIcon className="h-5 w-5" />
                 <span className="sr-only">Save</span>
@@ -25,7 +73,13 @@ export default function Home() {
               </Button>
             </div>
           </div>
-          <div className="flex-1 overflow-auto p-4" />
+          <div className="flex-1 overflow-auto p-4">
+            <CodeEditor
+              onChange={handleCodeChange}
+              code={code}
+              errors={errors}
+            />
+          </div>
         </div>
         <div className="flex h-full flex-col rounded-lg border bg-white shadow-sm dark:border-gray-800 dark:bg-gray-950">
           <div className="flex h-16 items-center justify-between border-b px-4 dark:border-gray-800">
@@ -38,9 +92,16 @@ export default function Home() {
               <span className="sr-only">Clear output</span>
             </Button>
           </div>
-          <div className="flex-1 overflow-auto p-4">
-            <pre className="font-mono text-sm text-gray-500 dark:text-gray-400">
-              Hello, Code Collab!
+          <div className="relative flex-1 overflow-auto p-4">
+            {executing && (
+              <div
+                className={`absolute inset-0 bg-black bg-opacity-25 flex items-center justify-center `}
+              >
+                <Spinner className="h-16 w-16" />
+              </div>
+            )}
+            <pre className="font-mono text-sm text-gray-800 dark:text-gray-400">
+              {output}
             </pre>
           </div>
         </div>
@@ -48,7 +109,30 @@ export default function Home() {
     </main>
   );
 }
-
+function Spinner({ className = "" }) {
+  return (
+    <svg
+      className={`animate-spin text-white ${className}`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      ></circle>
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      ></path>
+    </svg>
+  );
+}
 function CodeIcon(props) {
   return (
     <svg
@@ -146,6 +230,25 @@ function CloudyIcon(props) {
     >
       <path d="M17.5 21H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
       <path d="M22 10a3 3 0 0 0-3-3h-2.207a5.502 5.502 0 0 0-10.702.5" />
+    </svg>
+  );
+}
+
+function PlayIcon(props) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polygon points="6 3 20 12 6 21 6 3" />
     </svg>
   );
 }
