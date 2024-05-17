@@ -23,17 +23,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-export function EditorWrapper() {
-  // return <h2>Editor</h2>;
+import { User } from "next-auth";
+import { CodeSnippet } from "@prisma/client";
+import { snippets } from "@codemirror/lang-javascript";
+import { useRouter } from "next/navigation";
+
+export type CodeSnippetWithOptionalIdAndUserId = Omit<
+  CodeSnippet,
+  "id" | "userId"
+> &
+  Partial<Pick<CodeSnippet, "id" | "userId">>;
+
+export function EditorWrapper({
+  user,
+  initialCode,
+  initialLanguage,
+  snippetId,
+  saveCode,
+}: {
+  user: User | undefined;
+  initialCode: string;
+  initialLanguage: SupportedLanguage;
+  snippetId?: string;
+  saveCode: (
+    codeSnippet: CodeSnippetWithOptionalIdAndUserId,
+  ) => Promise<CodeSnippet | undefined>;
+}) {
   const [executing, setExecuting] = useState(false);
-  const [code, setCode] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [code, setCode] = useState(initialCode);
   const [output, setOutput] = useState("");
   const [errors, setErrors] = useState([]);
-  const [language, setLanguage] = useState<SupportedLanguage>("javascript");
+  const [language, setLanguage] = useState<SupportedLanguage>(initialLanguage);
   const codeRef = useRef(code);
   const languageRef = useRef(language);
   const [leftPaneWidth, setLeftPaneWidth] = useState(50); // Initialize to 50%
   const [isResizing, setIsResizing] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     codeRef.current = code;
@@ -95,6 +121,27 @@ export function EditorWrapper() {
       setExecuting(false);
     }
   }
+
+  async function handleSave() {
+    try {
+      setSaving(true);
+      const snippet = await saveCode({
+        code: codeRef.current,
+        language: languageRef.current,
+        id: snippetId,
+      });
+      if (!snippetId && snippet?.id) {
+        console.log("Routing!!!");
+        router.push(`/editor/${snippet.id}`);
+      }
+      console.log({ snippet });
+    } catch (e) {
+      console.error("Error saving snippet", e);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <main className={`flex-1 overflow-hidden`}>
       <div
@@ -139,7 +186,13 @@ export function EditorWrapper() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <Button size="icon" variant="ghost">
+              <Button
+                size="icon"
+                variant="ghost"
+                disabled={!user || saving}
+                title={user ? "Save" : "Log in to Save"}
+                onClick={handleSave}
+              >
                 <SaveIcon className="h-5 w-5" />
                 <span className="sr-only">Save</span>
               </Button>
