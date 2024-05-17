@@ -1,7 +1,11 @@
 import Image from "next/image";
 import { Inter } from "next/font/google";
 import { Button } from "@/components/ui/button";
-import { CodeEditor } from "@/components/code-editor";
+import {
+  CodeEditor,
+  SupportedLanguage,
+  supportedLanguages,
+} from "@/components/code-editor";
 import { useEffect, useRef, useState } from "react";
 import { CodeIcon } from "@/components/icons/code-icon";
 import { PlayIcon } from "@/components/icons/play-icon";
@@ -10,6 +14,15 @@ import { SaveIcon } from "@/components/icons/save-icon";
 import { TerminalIcon } from "@/components/icons/terminal-icon";
 import { CloudyIcon } from "@/components/icons/cloudy-icon";
 import { ResizeIcon } from "@/components/icons/resize-icon";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,13 +31,16 @@ export default function Home() {
   const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
   const [errors, setErrors] = useState([]);
+  const [language, setLanguage] = useState<SupportedLanguage>("javascript");
   const codeRef = useRef(code);
+  const languageRef = useRef(language);
   const [leftPaneWidth, setLeftPaneWidth] = useState(50); // Initialize to 50%
   const [isResizing, setIsResizing] = useState(false);
 
   useEffect(() => {
     codeRef.current = code;
-  }, [code]);
+    languageRef.current = language;
+  }, [code, language]);
 
   useEffect(() => {
     function handleMouseMove(e) {
@@ -62,7 +78,10 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ code: codeRef.current }),
+        body: JSON.stringify({
+          code: codeRef.current,
+          language: languageRef.current,
+        }),
       });
 
       const result = await response.json();
@@ -104,6 +123,25 @@ export default function Home() {
                 <PlayIcon className="h-5 w-5" />
                 <span className="sr-only">Run code</span>
               </Button>
+              <Select
+                value={language}
+                onValueChange={(value) => {
+                  setLanguage(value as SupportedLanguage);
+                }}
+              >
+                <SelectTrigger className="w-[140px] text-xs py-1 h-8 font-medium">
+                  <SelectValue placeholder="Select a language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {supportedLanguages.map((lang) => (
+                      <SelectItem key={lang} value={lang}>
+                        {lang}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
               <Button size="icon" variant="ghost">
                 <SaveIcon className="h-5 w-5" />
                 <span className="sr-only">Save</span>
@@ -120,6 +158,7 @@ export default function Home() {
               onExecute={handleExecute}
               code={code}
               errors={errors}
+              language={language}
             />
           </div>
         </div>

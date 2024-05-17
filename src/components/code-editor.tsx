@@ -2,16 +2,30 @@ import React, { useEffect, useRef } from "react";
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
+import { python } from "@codemirror/lang-python"; // Import other languages as needed
 import { keymap } from "@codemirror/view";
 import { defaultKeymap } from "@codemirror/commands";
 
+const languageExtensions = {
+  javascript,
+  python,
+} as const;
+
+export type SupportedLanguage = keyof typeof languageExtensions;
+
+export const supportedLanguages = Object.keys(
+  languageExtensions,
+) as SupportedLanguage[];
+
 export function CodeEditor({
   code,
+  language,
   onChange,
   onExecute,
   errors,
 }: {
   code: string;
+  language: SupportedLanguage;
   onChange: (newCode: string) => void;
   onExecute: () => void;
   errors: string[];
@@ -21,12 +35,13 @@ export function CodeEditor({
 
   useEffect(() => {
     if (editorRef.current) {
+      const languageExtension = languageExtensions[language] || javascript;
+
       const state = EditorState.create({
         doc: code,
         extensions: [
           basicSetup,
-          javascript(),
-          // keymap.of(defaultKeymap),
+          languageExtension(),
           keymap.of([
             ...defaultKeymap,
             {
@@ -56,7 +71,7 @@ export function CodeEditor({
         viewRef.current = null;
       };
     }
-  }, []);
+  }, [language]); // Recreate the editor when the language changes
 
   // Update editor content if `code` prop changes
   useEffect(() => {

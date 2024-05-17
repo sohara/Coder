@@ -4,6 +4,21 @@ import { randomBytes } from "crypto";
 
 const docker = new Docker();
 
+const languageConfig = {
+  javascript: {
+    image: "node:20",
+    cmd: (filePath: string) => `node ${filePath}`,
+    extension: "js",
+  },
+  python: {
+    image: "python:3.9",
+    cmd: (filePath: string) => `python ${filePath}`,
+    extension: "py",
+  },
+};
+
+type SupportedLanguage = keyof typeof languageConfig;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -11,9 +26,9 @@ export default async function handler(
   const body = req.body;
 
   if (isExpectedBody(body)) {
-    const { code } = body;
+    const { code, language } = body;
     try {
-      const result = await runCodeInDocker(code);
+      const result = await runCodeInDocker(code, language);
       res.status(200).json({ result });
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -25,25 +40,35 @@ export default async function handler(
 
 type ExecuteBody = {
   code: string;
+  language: SupportedLanguage;
 };
 
 function isExpectedBody(body: any): body is ExecuteBody {
-  return typeof body === "object" && typeof body.code === "string";
+  return (
+    typeof body === "object" &&
+    typeof body.code === "string" &&
+    typeof body.language === "string" &&
+    Object.keys(languageConfig).includes(body.language)
+  );
 }
 
-async function runCodeInDocker(code: string): Promise<string> {
+async function runCodeInDocker(
+  code: string,
+  language: SupportedLanguage,
+): Promise<string> {
+  const config = languageConfig[language];
   const TIMEOUT_MS = 5000; // Set the time limit to 5 seconds
   const tempDir = `/tmp/${randomBytes(8).toString("hex")}`;
-  const fileName = `${tempDir}/script.js`;
+  const fileName = `${tempDir}/script.${config.extension}`;
 
   const container = await docker.createContainer({
-    Image: "node:20", // Use the Node.js 20 image
+    Image: config.image, // Use the Node.js 20 image
     Cmd: [
       "sh",
       "-c",
       `mkdir -p ${tempDir} && echo "${code
         .replace(/"/g, '\\"')
-        .replace(/\n/g, "\\n")}" > ${fileName} && node ${fileName}`,
+        .replace(/\n/g, "\\n")}" > ${fileName} && ${config.cmd(fileName)}`,
     ],
     AttachStdout: true,
     AttachStderr: true,
