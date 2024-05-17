@@ -1,6 +1,6 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 import Docker from "dockerode";
+import { randomBytes } from "crypto";
 
 const docker = new Docker();
 
@@ -33,10 +33,18 @@ function isExpectedBody(body: any): body is ExecuteBody {
 
 async function runCodeInDocker(code: string): Promise<string> {
   const TIMEOUT_MS = 5000; // Set the time limit to 5 seconds
+  const tempDir = `/tmp/${randomBytes(8).toString("hex")}`;
+  const fileName = `${tempDir}/script.js`;
 
   const container = await docker.createContainer({
-    Image: "node:20", // Use the Node.js 18 image
-    Cmd: ["node", "-e", code],
+    Image: "node:20", // Use the Node.js 20 image
+    Cmd: [
+      "sh",
+      "-c",
+      `mkdir -p ${tempDir} && echo "${code
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, "\\n")}" > ${fileName} && node ${fileName}`,
+    ],
     AttachStdout: true,
     AttachStderr: true,
     Tty: false,
@@ -81,18 +89,18 @@ async function runCodeInDocker(code: string): Promise<string> {
             }
 
             let output = "";
-            stream.on("data", (chunk) => {
+            stream?.on("data", (chunk) => {
               output += chunk.toString();
             });
 
-            stream.on("end", async () => {
+            stream?.on("end", async () => {
               clearTimeout(timeoutId);
               resolve(output);
               // Remove the container after resolving
               await container.remove();
             });
 
-            stream.on("error", async (err) => {
+            stream?.on("error", async (err) => {
               clearTimeout(timeoutId);
               reject(err);
               // Remove the container after rejecting
