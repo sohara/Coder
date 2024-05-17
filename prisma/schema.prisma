@@ -15,6 +15,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+  codeSnippets  CodeSnippet[]
   // Optional for WebAuthn support
   Authenticator Authenticator[]
 
@@ -77,4 +78,12 @@ model Authenticator {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, credentialID])
+}
+
+model CodeSnippet {
+  id       String @id @default(cuid())
+  code     String
+  language String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String @map("user_id")
 }

@@ -21,42 +21,6 @@ export async function Header() {
           <PlayIcon className="h-5 w-5" />
           <span className="sr-only">Run code</span>
         </Button>
-        {/* <DropdownMenu> */}
-        {/*   <DropdownMenuTrigger asChild> */}
-        {/*     <Button size="icon" variant="ghost"> */}
-        {/*       <ShareIcon className="h-5 w-5" /> */}
-        {/*       <span className="sr-only">Share</span> */}
-        {/*     </Button> */}
-        {/*   </DropdownMenuTrigger> */}
-        {/*   <DropdownMenuContent align="end"> */}
-        {/*     <DropdownMenuItem>Copy link</DropdownMenuItem> */}
-        {/*     <DropdownMenuItem>Invite collaborators</DropdownMenuItem> */}
-        {/*   </DropdownMenuContent> */}
-        {/* </DropdownMenu> */}
-        {/* <DropdownMenu> */}
-        {/*   <DropdownMenuTrigger asChild> */}
-        {/*     <Button size="icon" variant="ghost"> */}
-        {/*       <img */}
-        {/*         alt="Avatar" */}
-        {/*         className="rounded-full" */}
-        {/*         height="32" */}
-        {/*         src="/placeholder.svg" */}
-        {/*         style={{ */}
-        {/*           aspectRatio: "32/32", */}
-        {/*           objectFit: "cover", */}
-        {/*         }} */}
-        {/*         width="32" */}
-        {/*       /> */}
-        {/*       <span className="sr-only">User menu</span> */}
-        {/*     </Button> */}
-        {/*   </DropdownMenuTrigger> */}
-        {/*   <DropdownMenuContent align="end"> */}
-        {/*     <DropdownMenuLabel>Jared Palmer</DropdownMenuLabel> */}
-        {/*     <DropdownMenuSeparator /> */}
-        {/*     <DropdownMenuItem>Settings</DropdownMenuItem> */}
-        {/*     <DropdownMenuItem>Logout</DropdownMenuItem> */}
-        {/*   </DropdownMenuContent> */}
-        {/* </DropdownMenu> */}
         <ModeToggle />
         <UserDropdown user={user} />
       </div>
