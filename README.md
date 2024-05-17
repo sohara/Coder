@@ -16,6 +16,14 @@ Run `npx auth secret` to generate a new auth secret, then add it the `.env` file
 
 To enable oauth authentication via Github you will need to register an app. Documentation can be found here: https://authjs.dev/guides/configuring-github#registering-your-app
 
+### Migrate the database
+
+After the environment variables are updated you can initialize the dev database:
+
+```bash
+npm exec prisma migrate dev
+```
+
 ### Running the Application
 
 Simply run the development server:
