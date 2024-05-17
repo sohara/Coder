@@ -24,6 +24,18 @@ After the environment variables are updated you can initialize the dev database:
 npm exec prisma migrate dev
 ```
 
+### Docker
+
+You will need Docker running on your system in order to execute user generated code in an isolated environment.
+
+Pull the necessary Docker images:
+
+```bash
+docker pull node:20
+docker pull python:3.9
+
+```
+
 ### Running the Application
 
 Simply run the development server:
