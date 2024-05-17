@@ -1,5 +1,5 @@
-import Image from "next/image";
-import { Inter } from "next/font/google";
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   CodeEditor,
@@ -23,10 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const inter = Inter({ subsets: ["latin"] });
-
-export default function Home() {
+export function EditorWrapper() {
+  // return <h2>Editor</h2>;
   const [executing, setExecuting] = useState(false);
   const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
@@ -97,9 +95,8 @@ export default function Home() {
       setExecuting(false);
     }
   }
-
   return (
-    <main className={`flex-1 overflow-hidden ${inter.className}`}>
+    <main className={`flex-1 overflow-hidden`}>
       <div
         className="grid h-full p-4"
         style={{

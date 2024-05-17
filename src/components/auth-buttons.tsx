@@ -10,7 +10,7 @@ export const LoginButton = () => {
       variant="outline"
       onClick={() =>
         signIn("github", {
-          callbackUrl: `${location.origin}/boards`,
+          callbackUrl: `${location.origin}/`,
         })
       }
     >
