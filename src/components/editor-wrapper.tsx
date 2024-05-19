@@ -34,12 +34,14 @@ export type CodeSnippetWithOptionalIdAndUserId = Omit<
 > &
   Partial<Pick<CodeSnippet, "id" | "userId">>;
 
+const STORAGE_KEY = "latestCode";
 export function EditorWrapper({
   user,
   initialCode,
   initialLanguage,
   snippetId,
   saveCode,
+  syncToLocalStorage,
 }: {
   user: User | undefined;
   initialCode: string;
@@ -48,13 +50,31 @@ export function EditorWrapper({
   saveCode: (
     codeSnippet: CodeSnippetWithOptionalIdAndUserId,
   ) => Promise<CodeSnippet | undefined>;
+  syncToLocalStorage: boolean;
 }) {
   const [executing, setExecuting] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [code, setCode] = useState(initialCode);
+  const [code, setCode] = useState(() => {
+    if (syncToLocalStorage) {
+      const snippetString = localStorage.getItem(STORAGE_KEY);
+      const snippetFromStorage = snippetString && JSON.parse(snippetString);
+      return snippetFromStorage?.code || initialCode;
+    }
+    return initialCode;
+  });
+
+  const [language, setLanguage] = useState<SupportedLanguage>(() => {
+    if (syncToLocalStorage) {
+      const snippetString = localStorage.getItem(STORAGE_KEY);
+      const snippetFromStorage = snippetString && JSON.parse(snippetString);
+      return (
+        (snippetFromStorage?.language as SupportedLanguage) || initialLanguage
+      );
+    }
+    return initialLanguage;
+  });
   const [output, setOutput] = useState("");
   const [errors, setErrors] = useState([]);
-  const [language, setLanguage] = useState<SupportedLanguage>(initialLanguage);
   const codeRef = useRef(code);
   const languageRef = useRef(language);
   const [leftPaneWidth, setLeftPaneWidth] = useState(50); // Initialize to 50%
@@ -64,10 +84,14 @@ export function EditorWrapper({
   useEffect(() => {
     codeRef.current = code;
     languageRef.current = language;
-  }, [code, language]);
+
+    if (syncToLocalStorage) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ code, language }));
+    }
+  }, [code, language, syncToLocalStorage]);
 
   useEffect(() => {
-    function handleMouseMove(e) {
+    function handleMouseMove(e: MouseEvent) {
       if (isResizing) {
         const newWidth = (e.clientX / window.innerWidth) * 100;
         setLeftPaneWidth(newWidth);
@@ -87,7 +111,7 @@ export function EditorWrapper({
     };
   }, [isResizing]);
 
-  function handleCodeChange(newCode) {
+  function handleCodeChange(newCode: string) {
     setCode(newCode);
   }
 
@@ -131,10 +155,10 @@ export function EditorWrapper({
         id: snippetId,
       });
       if (!snippetId && snippet?.id) {
-        console.log("Routing!!!");
         router.push(`/editor/${snippet.id}`);
+        // Remove local cache once it's persisted
+        localStorage.removeItem(STORAGE_KEY);
       }
-      console.log({ snippet });
     } catch (e) {
       console.error("Error saving snippet", e);
     } finally {
