@@ -217,25 +217,38 @@ export function EditorWrapper({
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      disabled={!user || saving}
-                      title={user ? "Save" : "Log in to Save"}
-                      onClick={handleSave}
-                    >
-                      <SaveIcon className="h-5 w-5" />
-                      <span className="sr-only">Save</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Log in to save</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              {!!user ? (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  disabled={!user || saving}
+                  title={user ? "Save" : "Log in to Save"}
+                  onClick={handleSave}
+                >
+                  <SaveIcon className="h-5 w-5" />
+                  <span className="sr-only">Save</span>
+                </Button>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        disabled={!user || saving}
+                        title={user ? "Save" : "Log in to Save"}
+                        onClick={handleSave}
+                      >
+                        <SaveIcon className="h-5 w-5" />
+                        <span className="sr-only">Save</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Log in to save</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               <Button size="icon" variant="ghost">
                 <DownloadIcon className="h-5 w-5" />
                 <span className="sr-only">Download</span>
