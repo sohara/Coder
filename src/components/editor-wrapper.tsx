@@ -240,10 +240,6 @@ export function EditorWrapper({
                   </Tooltip>
                 </TooltipProvider>
               )}
-              <Button size="icon" variant="ghost">
-                <DownloadIcon className="h-5 w-5" />
-                <span className="sr-only">Download</span>
-              </Button>
             </div>
           </div>
           <div className="flex-1 overflow-auto">
@@ -269,10 +265,6 @@ export function EditorWrapper({
               <TerminalIcon className="h-5 w-5" />
               <span className="text-sm font-medium">Output</span>
             </div>
-            <Button size="icon" variant="ghost">
-              <CloudyIcon className="h-5 w-5" />
-              <span className="sr-only">Clear output</span>
-            </Button>
           </div>
           <div className="relative flex-1 overflow-auto p-4">
             {executing && (
