@@ -28,6 +28,7 @@ export default async function Home() {
         saveCode={createCode}
         initialCode=""
         initialLanguage="javascript"
+        syncToLocalStorage={true}
       />
     </>
   );

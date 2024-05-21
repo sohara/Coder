@@ -59,6 +59,7 @@ export default async function EditorPage({
         initialCode={snippet.code}
         initialLanguage={snippet.language as SupportedLanguage}
         snippetId={params.id}
+        syncToLocalStorage={false}
       />
     </>
   );
