@@ -9,17 +9,14 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { CodeIcon } from "@/components/icons/code-icon";
 import { PlayIcon } from "@/components/icons/play-icon";
-import { DownloadIcon } from "@/components/icons/download-icon";
 import { SaveIcon } from "@/components/icons/save-icon";
 import { TerminalIcon } from "@/components/icons/terminal-icon";
-import { CloudyIcon } from "@/components/icons/cloudy-icon";
 import { ResizeIcon } from "@/components/icons/resize-icon";
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -80,7 +77,7 @@ export function EditorWrapper({
     return initialLanguage;
   });
   const [output, setOutput] = useState("");
-  const [errors, setErrors] = useState([]);
+  const [errors, setErrors] = useState<string[]>([]);
   const codeRef = useRef(code);
   const languageRef = useRef(language);
   const [leftPaneWidth, setLeftPaneWidth] = useState(50); // Initialize to 50%
@@ -145,8 +142,9 @@ export function EditorWrapper({
       } else {
         setOutput(result.result);
       }
-    } catch (error) {
-      setErrors([error.message]);
+    } catch (e) {
+      const err = e instanceof Error ? e : { message: e as string };
+      setErrors([err.message]);
     } finally {
       setExecuting(false);
     }

@@ -1,7 +1,7 @@
-export function TerminalIcon(props) {
+export function TerminalIcon({ className = "" }: { className: string }) {
   return (
     <svg
-      {...props}
+      className={className}
       xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
