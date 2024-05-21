@@ -32,7 +32,6 @@ import {
 
 import { User } from "next-auth";
 import { CodeSnippet } from "@prisma/client";
-import { snippets } from "@codemirror/lang-javascript";
 import { useRouter } from "next/navigation";
 
 export type CodeSnippetWithOptionalIdAndUserId = Omit<
