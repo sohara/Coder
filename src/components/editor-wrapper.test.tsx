@@ -1,8 +1,15 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { EditorWrapper } from "./editor-wrapper";
 import { CodeEditor } from "./code-editor";
 import { afterEach } from "node:test";
+import { act } from "react";
 
 // Mock the required props
 const mockUser = { name: "Test User" };
@@ -264,6 +271,7 @@ describe("EditorWrapper", () => {
     // Check if the URL is updated to the new snippet ID
     expect(screen.getByTitle("Save").closest("button")).not.toBeDisabled();
   });
+
   it("handles resizing correctly", async () => {
     render(
       <EditorWrapper
@@ -291,6 +299,33 @@ describe("EditorWrapper", () => {
       const gridColumnStyle =
         mainElement.querySelector(".grid")!.style.gridTemplateColumns;
       expect(gridColumnStyle).toContain("25%"); // Adjust based on the expected new width
+    });
+  });
+
+  it("displays a tooltip prompting to log in when save button is hovered and user is not logged in", async () => {
+    const baseDom = render(
+      <EditorWrapper
+        user={undefined} // User is not logged in
+        initialCode={mockInitialCode}
+        initialLanguage={mockInitialLanguage}
+        snippetId={mockSnippetId}
+        saveCode={mockSaveCode}
+        syncToLocalStorage={false}
+      />,
+    );
+
+    // Hover over the save button
+    await act(async () => {
+      userEvent.hover(screen.getByRole("button", { name: /save/i }));
+    });
+
+    // Check for the tooltip
+    act(async () => {
+      await waitFor(() => {
+        const tooltip = screen.getByRole("tooltip");
+        expect(within(tooltip).getByText("Log in to save")).toBeInTheDocument();
+        screen.logTestingPlaygroundURL();
+      });
     });
   });
 });

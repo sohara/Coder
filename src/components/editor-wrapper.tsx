@@ -230,17 +230,9 @@ export function EditorWrapper({
               ) : (
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        disabled={!user || saving}
-                        title={user ? "Save" : "Log in to Save"}
-                        onClick={handleSave}
-                      >
-                        <SaveIcon className="h-5 w-5" />
-                        <span className="sr-only">Save</span>
-                      </Button>
+                    <TooltipTrigger className="px-2 text-gray-500">
+                      <SaveIcon className="h-5 w-5" />
+                      <span className="sr-only">Save</span>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Log in to save</p>
