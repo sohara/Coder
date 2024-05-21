@@ -1,23 +1,7 @@
-import {
-  CodeSnippetWithOptionalIdAndUserId,
-  EditorWrapper,
-} from "@/components/editor-wrapper";
+import { EditorWrapper } from "@/components/editor-wrapper";
 
-import { prisma } from "@/lib/prisma";
-import { CodeSnippet } from "@prisma/client";
 import { getCurrentUser } from "@/lib/session";
-
-export async function createCode(
-  snippet: CodeSnippetWithOptionalIdAndUserId,
-): Promise<CodeSnippet | undefined> {
-  "use server";
-  const user = await getCurrentUser();
-  if (!user || !user.id) return;
-  const codeSnippet = await prisma.codeSnippet.create({
-    data: { code: snippet.code, language: snippet.language, userId: user.id },
-  });
-  return codeSnippet;
-}
+import { createCode } from "@/lib/actions";
 
 export default async function Home() {
   const user = await getCurrentUser();

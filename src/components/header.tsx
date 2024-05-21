@@ -17,10 +17,6 @@ export async function Header() {
         </Link>
       </div>
       <div className="flex items-center gap-4">
-        <Button size="icon" variant="ghost">
-          <PlayIcon className="h-5 w-5" />
-          <span className="sr-only">Run code</span>
-        </Button>
         <ModeToggle />
         <UserDropdown user={user} />
       </div>

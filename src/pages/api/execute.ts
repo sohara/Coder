@@ -30,8 +30,9 @@ export default async function handler(
     try {
       const result = await runCodeInDocker(code, language);
       res.status(200).json({ result });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+    } catch (e) {
+      const err = e instanceof Error ? e : { message: e as string };
+      res.status(500).json({ error: err.message });
     }
   } else {
     res.status(400).json({ error: "Unexpected request data" });
@@ -77,7 +78,7 @@ async function runCodeInDocker(
 
   let timeoutId: NodeJS.Timeout;
 
-  const timeoutPromise = new Promise<void>((_, reject) => {
+  const timeoutPromise = new Promise<string>((_, reject) => {
     timeoutId = setTimeout(async () => {
       try {
         await container.stop({ t: 0 }); // Force stop immediately
