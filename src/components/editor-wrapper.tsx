@@ -230,17 +230,9 @@ export function EditorWrapper({
               ) : (
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        disabled={!user || saving}
-                        title={user ? "Save" : "Log in to Save"}
-                        onClick={handleSave}
-                      >
-                        <SaveIcon className="h-5 w-5" />
-                        <span className="sr-only">Save</span>
-                      </Button>
+                    <TooltipTrigger className="px-2 text-gray-500">
+                      <SaveIcon className="h-5 w-5" />
+                      <span className="sr-only">Save</span>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Log in to save</p>
@@ -267,6 +259,7 @@ export function EditorWrapper({
         <div
           className="z-10 w-8 hover:bg-gray-200 rounded-lg cursor-col-resize flex items-center justify-center"
           onMouseDown={() => setIsResizing(true)}
+          role="separator"
         >
           <ResizeIcon className="h-8 w-8 text-gray-600" />
         </div>
