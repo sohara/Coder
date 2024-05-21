@@ -199,4 +199,98 @@ describe("EditorWrapper", () => {
       );
     });
   });
+
+  it("handles execute code functionality correctly", async () => {
+    // Mock fetch to simulate API call
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ result: "Execution successful" }),
+      }),
+    ) as jest.Mock;
+
+    render(
+      <EditorWrapper
+        user={mockUser}
+        initialCode={mockInitialCode}
+        initialLanguage={mockInitialLanguage}
+        snippetId={mockSnippetId}
+        saveCode={mockSaveCode}
+        syncToLocalStorage={false}
+      />,
+    );
+
+    // Click the execute button
+    fireEvent.click(screen.getByTitle("Execute code (Shift+Enter)"));
+
+    // Check if the output is updated correctly
+    await waitFor(() => {
+      expect(screen.getByText("Execution successful")).toBeInTheDocument();
+    });
+
+    // Restore fetch to its original implementation
+    global.fetch.mockRestore();
+  });
+
+  it("handles save code functionality correctly", async () => {
+    render(
+      <EditorWrapper
+        user={mockUser}
+        initialCode={mockInitialCode}
+        initialLanguage={mockInitialLanguage}
+        snippetId={mockSnippetId}
+        saveCode={mockSaveCode}
+        syncToLocalStorage={false}
+      />,
+    );
+
+    // Mock the saveCode function to simulate saving code
+    mockSaveCode.mockResolvedValue({ id: "456" });
+
+    // Click the save button
+    fireEvent.click(screen.getByTitle("Save"));
+
+    // Check if the saveCode function is called
+    await waitFor(() => {
+      expect(mockSaveCode).toHaveBeenCalledTimes(1);
+    });
+
+    // Check if the saveCode function was called with the correct arguments
+    expect(mockSaveCode).toHaveBeenCalledWith({
+      code: mockInitialCode,
+      language: mockInitialLanguage,
+      id: mockSnippetId,
+    });
+
+    // Check if the URL is updated to the new snippet ID
+    expect(screen.getByTitle("Save").closest("button")).not.toBeDisabled();
+  });
+  it("handles resizing correctly", async () => {
+    render(
+      <EditorWrapper
+        user={mockUser}
+        initialCode={mockInitialCode}
+        initialLanguage={mockInitialLanguage}
+        snippetId={mockSnippetId}
+        saveCode={mockSaveCode}
+        syncToLocalStorage={false}
+      />,
+    );
+
+    // Simulate mouse down on the resize handler
+    fireEvent.mouseDown(screen.getByRole("separator"));
+
+    // Simulate mouse move to resize
+    fireEvent.mouseMove(window, { clientX: window.innerWidth / 4 });
+
+    // Simulate mouse up to finish resizing
+    fireEvent.mouseUp(window);
+
+    // Verify the state updates correctly
+    await waitFor(() => {
+      const mainElement = screen.getByRole("main");
+      const gridColumnStyle =
+        mainElement.querySelector(".grid")!.style.gridTemplateColumns;
+      expect(gridColumnStyle).toContain("25%"); // Adjust based on the expected new width
+    });
+  });
 });

@@ -267,6 +267,7 @@ export function EditorWrapper({
         <div
           className="z-10 w-8 hover:bg-gray-200 rounded-lg cursor-col-resize flex items-center justify-center"
           onMouseDown={() => setIsResizing(true)}
+          role="separator"
         >
           <ResizeIcon className="h-8 w-8 text-gray-600" />
         </div>
