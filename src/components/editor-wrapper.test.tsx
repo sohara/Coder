@@ -328,4 +328,35 @@ describe("EditorWrapper", () => {
       });
     });
   });
+
+  it("handles execute code error correctly", async () => {
+    // Mock fetch to simulate an API call with an error response
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ error: "Execution timed out" }),
+      }),
+    ) as jest.Mock;
+
+    render(
+      <EditorWrapper
+        user={mockUser}
+        initialCode={mockInitialCode}
+        initialLanguage={mockInitialLanguage}
+        snippetId={mockSnippetId}
+        saveCode={mockSaveCode}
+        syncToLocalStorage={false}
+      />,
+    );
+
+    // Click the execute button
+    fireEvent.click(screen.getByTitle("Execute code (Shift+Enter)"));
+
+    // Check if the error message is displayed correctly
+    await waitFor(() => {
+      expect(screen.getByText("Execution timed out")).toBeInTheDocument();
+    });
+
+    // Restore fetch to its original implementation
+    global.fetch.mockRestore();
+  });
 });

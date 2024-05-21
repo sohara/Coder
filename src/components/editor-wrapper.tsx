@@ -77,7 +77,7 @@ export function EditorWrapper({
     return initialLanguage;
   });
   const [output, setOutput] = useState("");
-  const [errors, setErrors] = useState<string[]>([]);
+  const [error, setError] = useState<string>("");
   const codeRef = useRef(code);
   const languageRef = useRef(language);
   const [leftPaneWidth, setLeftPaneWidth] = useState(50); // Initialize to 50%
@@ -119,10 +119,9 @@ export function EditorWrapper({
   }
 
   async function handleExecute() {
-    console.log("RUNNING");
     try {
       setExecuting(true);
-      setErrors([]);
+      setError("");
       setOutput("");
       const response = await fetch("/api/execute", {
         method: "POST",
@@ -137,14 +136,15 @@ export function EditorWrapper({
 
       const result = await response.json();
 
-      if (result.errors) {
-        setErrors(result.errors);
+      const error = result.error;
+      if (error) {
+        setError(error);
       } else {
         setOutput(result.result);
       }
     } catch (e) {
       const err = e instanceof Error ? e : { message: e as string };
-      setErrors([err.message]);
+      setError(err.message);
     } finally {
       setExecuting(false);
     }
@@ -245,7 +245,6 @@ export function EditorWrapper({
               onChange={handleCodeChange}
               onExecute={handleExecute}
               code={code}
-              errors={errors}
               language={language}
             />
           </div>
@@ -265,6 +264,11 @@ export function EditorWrapper({
             </div>
           </div>
           <div className="relative flex-1 overflow-auto p-4">
+            {error.length > 0 && (
+              <pre className="font-mono text-sm text-red-700 dark:text-gray-400">
+                {error}
+              </pre>
+            )}
             {executing && (
               <div
                 className={`absolute inset-0 bg-black bg-opacity-25 flex items-center justify-center`}
