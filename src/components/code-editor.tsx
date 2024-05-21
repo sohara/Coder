@@ -22,13 +22,11 @@ export function CodeEditor({
   language,
   onChange,
   onExecute,
-  errors,
 }: {
   code: string;
   language: SupportedLanguage;
   onChange: (newCode: string) => void;
   onExecute: () => void;
-  errors: string[];
 }) {
   const editorRef = useRef(null);
   const viewRef = useRef<EditorView | null>(null);
