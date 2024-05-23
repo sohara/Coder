@@ -24,9 +24,10 @@ export default async function EditorPage({
       <EditorWrapper
         user={user}
         saveCode={saveCode}
-        initialCode={snippet.code}
-        initialLanguage={snippet.language as SupportedLanguage}
-        snippetId={params.id}
+        snippet={snippet}
+        // initialCode={snippet.code}
+        // initialLanguage={snippet.language as SupportedLanguage}
+        // snippetId={params.id}
         syncToLocalStorage={false}
       />
     </>
