@@ -25,9 +25,6 @@ export default async function EditorPage({
         user={user}
         saveCode={saveCode}
         snippet={snippet}
-        // initialCode={snippet.code}
-        // initialLanguage={snippet.language as SupportedLanguage}
-        // snippetId={params.id}
         syncToLocalStorage={false}
       />
     </>
