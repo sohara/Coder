@@ -149,7 +149,6 @@ export function EditorWrapper({
   }
   const isOwner = snippet.id && snippet.userId !== user?.id;
   const isOwnedBySomeoneElse = snippet.userId && snippet.userId !== user?.id;
-  console.log({ snippet, isOwner, user });
 
   async function handleSave() {
     try {
