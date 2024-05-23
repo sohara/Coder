@@ -6,16 +6,22 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { EditorWrapper } from "./editor-wrapper";
+import {
+  CodeSnippetWithOptionalIdAndUserId,
+  EditorWrapper,
+} from "./editor-wrapper";
 import { CodeEditor } from "./code-editor";
 import { afterEach } from "node:test";
 import { act } from "react";
 
 // Mock the required props
 const mockUser = { name: "Test User" };
-const mockInitialCode = 'console.log("Hello, world!");';
-const mockInitialLanguage = "javascript";
-const mockSnippetId = "123";
+const mockInitialSnippet: CodeSnippetWithOptionalIdAndUserId = {
+  id: "123abc",
+  code: 'console.log("Hello, world!");',
+  language: "javascript",
+};
+
 const mockSaveCode = jest.fn().mockResolvedValue(undefined);
 const mockSyncToLocalStorage = false;
 
@@ -42,7 +48,7 @@ const originCreateRange = global.document.createRange;
 
 describe("EditorWrapper", () => {
   beforeEach(() => {
-    // jest.resetModules();
+    jest.resetAllMocks();
     mockedCodeEditor.mockImplementation(
       jest.requireActual("./code-editor").CodeEditor,
     );
@@ -67,9 +73,7 @@ describe("EditorWrapper", () => {
     render(
       <EditorWrapper
         user={mockUser}
-        initialCode={mockInitialCode}
-        initialLanguage={mockInitialLanguage}
-        snippetId={mockSnippetId}
+        snippet={mockInitialSnippet}
         saveCode={mockSaveCode}
         syncToLocalStorage={mockSyncToLocalStorage}
       />,
@@ -125,9 +129,7 @@ describe("EditorWrapper", () => {
     render(
       <EditorWrapper
         user={mockUser}
-        initialCode={mockInitialCode}
-        initialLanguage={mockInitialLanguage}
-        snippetId={mockSnippetId}
+        snippet={mockInitialSnippet}
         saveCode={mockSaveCode}
         syncToLocalStorage={true}
       />,
@@ -159,9 +161,7 @@ describe("EditorWrapper", () => {
     render(
       <EditorWrapper
         user={mockUser}
-        initialCode={mockInitialCode}
-        initialLanguage={mockInitialLanguage}
-        snippetId={mockSnippetId}
+        snippet={mockInitialSnippet}
         saveCode={mockSaveCode}
         syncToLocalStorage={true}
       />,
@@ -218,9 +218,7 @@ describe("EditorWrapper", () => {
     render(
       <EditorWrapper
         user={mockUser}
-        initialCode={mockInitialCode}
-        initialLanguage={mockInitialLanguage}
-        snippetId={mockSnippetId}
+        snippet={mockInitialSnippet}
         saveCode={mockSaveCode}
         syncToLocalStorage={false}
       />,
@@ -242,9 +240,7 @@ describe("EditorWrapper", () => {
     render(
       <EditorWrapper
         user={mockUser}
-        initialCode={mockInitialCode}
-        initialLanguage={mockInitialLanguage}
-        snippetId={mockSnippetId}
+        snippet={mockInitialSnippet}
         saveCode={mockSaveCode}
         syncToLocalStorage={false}
       />,
@@ -262,11 +258,7 @@ describe("EditorWrapper", () => {
     });
 
     // Check if the saveCode function was called with the correct arguments
-    expect(mockSaveCode).toHaveBeenCalledWith({
-      code: mockInitialCode,
-      language: mockInitialLanguage,
-      id: mockSnippetId,
-    });
+    expect(mockSaveCode).toHaveBeenCalledWith(mockInitialSnippet);
 
     // Check if the URL is updated to the new snippet ID
     expect(screen.getByTitle("Save").closest("button")).not.toBeDisabled();
@@ -276,9 +268,7 @@ describe("EditorWrapper", () => {
     render(
       <EditorWrapper
         user={mockUser}
-        initialCode={mockInitialCode}
-        initialLanguage={mockInitialLanguage}
-        snippetId={mockSnippetId}
+        snippet={mockInitialSnippet}
         saveCode={mockSaveCode}
         syncToLocalStorage={false}
       />,
@@ -302,13 +292,94 @@ describe("EditorWrapper", () => {
     });
   });
 
+  it("handles execute code error correctly", async () => {
+    // Mock fetch to simulate an API call with an error response
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ error: "Execution timed out" }),
+      }),
+    ) as jest.Mock;
+
+    render(
+      <EditorWrapper
+        user={mockUser}
+        snippet={mockInitialSnippet}
+        saveCode={mockSaveCode}
+        syncToLocalStorage={false}
+      />,
+    );
+
+    // Click the execute button
+    fireEvent.click(screen.getByTitle("Execute code (Shift+Enter)"));
+
+    // Check if the error message is displayed correctly
+    await waitFor(() => {
+      expect(screen.getByText("Execution timed out")).toBeInTheDocument();
+    });
+
+    // Restore fetch to its original implementation
+    global.fetch.mockRestore();
+  });
+
+  it("does not allow saving if the current user is not the owner of the snippet", async () => {
+    const notOwnerUser = { ...mockUser, id: "not-owner" }; // Simulate a different user
+
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    render(
+      <EditorWrapper
+        user={notOwnerUser}
+        snippet={{ ...mockInitialSnippet, userId: "abc123" }}
+        saveCode={mockSaveCode}
+        syncToLocalStorage={false}
+      />,
+    );
+
+    // Check that the save button is disabled
+    expect(screen.getByTitle("Save")).toBeDisabled();
+
+    // Ensure handleSave is not called
+    fireEvent.click(screen.getByTitle("Save"));
+    expect(mockSaveCode).not.toHaveBeenCalled();
+  });
+
+  it("allows saving if the current user is the owner of the snippet", async () => {
+    const ownerUser = { ...mockUser, id: "82343b" }; // Simulate the owner user with matching ID
+
+    render(
+      <EditorWrapper
+        user={ownerUser}
+        snippet={{ ...mockInitialSnippet, userId: ownerUser.id }}
+        saveCode={mockSaveCode}
+        syncToLocalStorage={false}
+      />,
+    );
+
+    // Mock the saveCode function to simulate saving code
+    mockSaveCode.mockResolvedValue({ id: "456" });
+
+    // Click the save button
+    fireEvent.click(screen.getByTitle("Save"));
+
+    // Check that the saveCode function is called
+    await waitFor(() => {
+      expect(mockSaveCode).toHaveBeenCalledTimes(1);
+    });
+
+    // Check that the saveCode function is called with the correct arguments
+    expect(mockSaveCode).toHaveBeenCalledWith(mockInitialSnippet);
+
+    // Check if the URL is updated to the new snippet ID
+    expect(screen.getByTitle("Save").closest("button")).not.toBeDisabled();
+  });
+
   it("displays a tooltip prompting to log in when save button is hovered and user is not logged in", async () => {
     const baseDom = render(
       <EditorWrapper
         user={undefined} // User is not logged in
-        initialCode={mockInitialCode}
-        initialLanguage={mockInitialLanguage}
-        snippetId={mockSnippetId}
+        snippet={mockInitialSnippet}
         saveCode={mockSaveCode}
         syncToLocalStorage={false}
       />,
@@ -327,36 +398,5 @@ describe("EditorWrapper", () => {
         screen.logTestingPlaygroundURL();
       });
     });
-  });
-
-  it("handles execute code error correctly", async () => {
-    // Mock fetch to simulate an API call with an error response
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve({ error: "Execution timed out" }),
-      }),
-    ) as jest.Mock;
-
-    render(
-      <EditorWrapper
-        user={mockUser}
-        initialCode={mockInitialCode}
-        initialLanguage={mockInitialLanguage}
-        snippetId={mockSnippetId}
-        saveCode={mockSaveCode}
-        syncToLocalStorage={false}
-      />,
-    );
-
-    // Click the execute button
-    fireEvent.click(screen.getByTitle("Execute code (Shift+Enter)"));
-
-    // Check if the error message is displayed correctly
-    await waitFor(() => {
-      expect(screen.getByText("Execution timed out")).toBeInTheDocument();
-    });
-
-    // Restore fetch to its original implementation
-    global.fetch.mockRestore();
   });
 });

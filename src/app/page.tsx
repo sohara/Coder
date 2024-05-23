@@ -1,17 +1,23 @@
-import { EditorWrapper } from "@/components/editor-wrapper";
+import {
+  CodeSnippetWithOptionalIdAndUserId,
+  EditorWrapper,
+} from "@/components/editor-wrapper";
 
 import { getCurrentUser } from "@/lib/session";
 import { createCode } from "@/lib/actions";
 
 export default async function Home() {
   const user = await getCurrentUser();
+  const defaultSnippet: CodeSnippetWithOptionalIdAndUserId = {
+    code: "",
+    language: "javascript",
+  };
   return (
     <>
       <EditorWrapper
         user={user}
         saveCode={createCode}
-        initialCode=""
-        initialLanguage="javascript"
+        snippet={defaultSnippet}
         syncToLocalStorage={true}
       />
     </>

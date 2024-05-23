@@ -40,16 +40,12 @@ export type CodeSnippetWithOptionalIdAndUserId = Omit<
 const STORAGE_KEY = "latestCode";
 export function EditorWrapper({
   user,
-  initialCode,
-  initialLanguage,
-  snippetId,
+  snippet,
   saveCode,
   syncToLocalStorage,
 }: {
   user: User | undefined;
-  initialCode: string;
-  initialLanguage: SupportedLanguage;
-  snippetId?: string;
+  snippet: CodeSnippetWithOptionalIdAndUserId;
   saveCode: (
     codeSnippet: CodeSnippetWithOptionalIdAndUserId,
   ) => Promise<CodeSnippet | undefined>;
@@ -61,9 +57,9 @@ export function EditorWrapper({
     if (syncToLocalStorage) {
       const snippetString = localStorage.getItem(STORAGE_KEY);
       const snippetFromStorage = snippetString && JSON.parse(snippetString);
-      return snippetFromStorage?.code || initialCode;
+      return snippetFromStorage?.code || snippet.code;
     }
-    return initialCode;
+    return snippet.code;
   });
 
   const [language, setLanguage] = useState<SupportedLanguage>(() => {
@@ -71,11 +67,13 @@ export function EditorWrapper({
       const snippetString = localStorage.getItem(STORAGE_KEY);
       const snippetFromStorage = snippetString && JSON.parse(snippetString);
       return (
-        (snippetFromStorage?.language as SupportedLanguage) || initialLanguage
+        (snippetFromStorage?.language as SupportedLanguage) ||
+        (snippet.language as SupportedLanguage)
       );
     }
-    return initialLanguage;
+    return snippet.language as SupportedLanguage;
   });
+
   const [output, setOutput] = useState("");
   const [error, setError] = useState<string>("");
   const codeRef = useRef(code);
@@ -149,17 +147,24 @@ export function EditorWrapper({
       setExecuting(false);
     }
   }
+  const isOwner = snippet.id && snippet.userId !== user?.id;
+  const isOwnedBySomeoneElse = snippet.userId && snippet.userId !== user?.id;
 
   async function handleSave() {
     try {
       setSaving(true);
-      const snippet = await saveCode({
+      if (isOwnedBySomeoneElse) {
+        console.error("User is not the owner of the snippet");
+        return;
+      }
+      const savedSnippet = await saveCode({
         code: codeRef.current,
         language: languageRef.current,
-        id: snippetId,
+        id: snippet.id,
       });
-      if (!snippetId && snippet?.id) {
-        router.push(`/editor/${snippet.id}`);
+      // Route from index to new editor page when first saved
+      if (!snippet.id && savedSnippet?.id) {
+        router.push(`/editor/${savedSnippet.id}`);
         // Remove local cache once it's persisted
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -218,7 +223,7 @@ export function EditorWrapper({
                 <Button
                   size="icon"
                   variant="ghost"
-                  disabled={!user || saving}
+                  disabled={isOwnedBySomeoneElse || saving}
                   title={user ? "Save" : "Log in to Save"}
                   onClick={handleSave}
                 >
