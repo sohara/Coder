@@ -40,17 +40,11 @@ export type CodeSnippetWithOptionalIdAndUserId = Omit<
 const STORAGE_KEY = "latestCode";
 export function EditorWrapper({
   user,
-  // initialCode,
-  // initialLanguage,
-  // snippetId,
   snippet,
   saveCode,
   syncToLocalStorage,
 }: {
   user: User | undefined;
-  // initialCode: string;
-  // initialLanguage: SupportedLanguage;
-  // snippetId?: string;
   snippet: CodeSnippetWithOptionalIdAndUserId;
   saveCode: (
     codeSnippet: CodeSnippetWithOptionalIdAndUserId,

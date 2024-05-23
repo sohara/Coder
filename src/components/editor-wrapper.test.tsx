@@ -48,7 +48,7 @@ const originCreateRange = global.document.createRange;
 
 describe("EditorWrapper", () => {
   beforeEach(() => {
-    // jest.resetModules();
+    jest.resetAllMocks();
     mockedCodeEditor.mockImplementation(
       jest.requireActual("./code-editor").CodeEditor,
     );
@@ -331,28 +331,21 @@ describe("EditorWrapper", () => {
     render(
       <EditorWrapper
         user={notOwnerUser}
-        snippet={mockInitialSnippet}
+        snippet={{ ...mockInitialSnippet, userId: "abc123" }}
         saveCode={mockSaveCode}
         syncToLocalStorage={false}
       />,
     );
 
-    // Click the save button
+    // Check that the save button is disabled
+    expect(screen.getByTitle("Save")).toBeDisabled();
+
+    // Ensure handleSave is not called
     fireEvent.click(screen.getByTitle("Save"));
-
-    // Check that the saveCode function is not called
-    await waitFor(() => {
-      expect(mockSaveCode).not.toHaveBeenCalled();
-    });
-
-    // Check if the console error message is logged
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "User is not the owner of the snippet",
-    );
-    consoleErrorSpy.mockRestore();
+    expect(mockSaveCode).not.toHaveBeenCalled();
   });
 
-  it.only("allows saving if the current user is the owner of the snippet", async () => {
+  it("allows saving if the current user is the owner of the snippet", async () => {
     const ownerUser = { ...mockUser, id: "82343b" }; // Simulate the owner user with matching ID
 
     render(

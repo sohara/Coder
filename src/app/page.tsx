@@ -10,7 +10,7 @@ export default async function Home() {
   const user = await getCurrentUser();
   const defaultSnippet: CodeSnippetWithOptionalIdAndUserId = {
     code: "",
-    language: "javscript",
+    language: "javascript",
   };
   return (
     <>
