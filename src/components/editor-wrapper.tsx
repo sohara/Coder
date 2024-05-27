@@ -54,7 +54,7 @@ export function EditorWrapper({
   const [executing, setExecuting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [code, setCode] = useState(() => {
-    if (syncToLocalStorage) {
+    if (typeof window !== "undefined" && syncToLocalStorage) {
       const snippetString = localStorage.getItem(STORAGE_KEY);
       const snippetFromStorage = snippetString && JSON.parse(snippetString);
       return snippetFromStorage?.code || snippet.code;
@@ -63,7 +63,7 @@ export function EditorWrapper({
   });
 
   const [language, setLanguage] = useState<SupportedLanguage>(() => {
-    if (syncToLocalStorage) {
+    if (typeof window !== "undefined" && syncToLocalStorage) {
       const snippetString = localStorage.getItem(STORAGE_KEY);
       const snippetFromStorage = snippetString && JSON.parse(snippetString);
       return (
